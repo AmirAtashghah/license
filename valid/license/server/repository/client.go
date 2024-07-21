@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/jackc/pgx/v5"
-	"license/entity"
+	"server/entity"
 )
 
 const (
@@ -24,18 +24,26 @@ const (
 )
 
 func ClientExists(conn *pgx.Conn, id string) (bool, error) {
+
 	var exists bool
+
 	err := conn.QueryRow(context.Background(), EXISTS, id).Scan(&exists)
+
 	return exists, err
 }
 
 func InsertClient(conn *pgx.Conn, client entity.Client) error {
 
 	_, err := conn.Exec(context.Background(), INSERT, client.ID, client.SoftwareName, client.SoftwareVersion, client.HardwareHash, client.LicenseType, client.UserMetadata, client.ExpiresAt, client.CreatedAt, client.UpdatedAt, client.DeletedAt)
-	return err
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func GetClientByID(conn *pgx.Conn, id string) (*entity.Client, error) {
+
 	var client entity.Client
 
 	err := conn.QueryRow(context.Background(), GET, id).Scan(
