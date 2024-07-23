@@ -6,7 +6,6 @@ import (
 	_ "github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	"log"
 	"server/pkg/param"
 )
 
@@ -18,23 +17,18 @@ func (h Handler) CheckLicense(ctx *fiber.Ctx) error {
 	clientInfo := new(param.ClientRequest)
 
 	if err := json.Unmarshal(ctx.Body(), clientInfo); err != nil {
-		log.Println("22", err)
-		return fiber.NewError(400, err.Error())
+		return fiber.NewError(fiber.ErrBadRequest.Code, err.Error())
 	}
 
 	// validate data. 1. check timestamp, 2. check random number
 
-	// todo write function in service for this
 	validate := validator.New()
 
 	if err := validate.Struct(clientInfo); err != nil {
 		return fiber.NewError(400, err.Error())
 	}
-	// end todo
 
 	if err := h.clientSvc.ValidateTimestamp(clientInfo.TimeStamp); err != nil {
-		log.Println("37", err)
-
 		return fiber.NewError(400, err.Error())
 	}
 
@@ -51,8 +45,6 @@ func (h Handler) CheckLicense(ctx *fiber.Ctx) error {
 		clientInfo.ID = uID.String()
 
 		if err := h.clientSvc.AddNewClient(clientInfo); err != nil {
-			log.Println("57", err)
-
 			return fiber.NewError(400, err.Error())
 		}
 
@@ -79,8 +71,6 @@ func (h Handler) CheckLicense(ctx *fiber.Ctx) error {
 		// generate auth key
 		authKey, err := h.clientSvc.GenerateAuthKey(clientInfo.TimeStamp, clientInfo.RandomNumber)
 		if err != nil {
-			log.Println("87", err)
-
 			return fiber.NewError(400, err.Error())
 		}
 
@@ -96,14 +86,60 @@ func (h Handler) CheckLicense(ctx *fiber.Ctx) error {
 
 func (h Handler) ListClients(ctx *fiber.Ctx) error {
 
-	return nil
+	req := new(param.ClientFilter)
+	if err := json.Unmarshal(ctx.Body(), req); err != nil {
+		return fiber.NewError(400, err.Error())
+	}
+
+	clients, err := h.clientSvc.ListClients(*req)
+	if err != nil {
+		return fiber.NewError(400, err.Error())
+	}
+
+	return ctx.Status(200).JSON(clients)
 }
 
 func (h Handler) UpdateClient(ctx *fiber.Ctx) error {
 
-	return nil
+	req := new(param.UpdateClientRequest)
+	if err := json.Unmarshal(ctx.Body(), req); err != nil {
+		return fiber.NewError(400, err.Error())
+	}
+
+	if err := h.clientSvc.UpdateClient(*req); err != nil {
+		return fiber.NewError(400, err.Error())
+	}
+
+	return ctx.Status(200).JSON(fiber.Map{"message": "updated successfully"})
 }
 
-func (h Handler) DeleteClient(ctx *fiber.Ctx) error { return nil }
+func (h Handler) UpdateActivateStatus(ctx *fiber.Ctx) error {
 
-func (h Handler) CreateClient(ctx *fiber.Ctx) error { return nil }
+	req := new(param.ChangeActivateRequest)
+	if err := json.Unmarshal(ctx.Body(), req); err != nil {
+		return fiber.NewError(400, err.Error())
+	}
+
+	if err := h.clientSvc.ChangeActiveStatus(*req); err != nil {
+		return fiber.NewError(400, err.Error())
+	}
+
+	return ctx.Status(200).JSON(fiber.Map{"message": "updated activate status successfully"})
+}
+
+func (h Handler) DeleteClient(ctx *fiber.Ctx) error {
+
+	req := new(param.DeleteClientRequest)
+	if err := json.Unmarshal(ctx.Body(), req); err != nil {
+		return fiber.NewError(400, err.Error())
+	}
+
+	if err := h.clientSvc.DeleteClient(req.ID); err != nil {
+		return fiber.NewError(400, err.Error())
+	}
+
+	return ctx.Status(200).JSON(fiber.Map{"message": "deleted successfully"})
+}
+
+// todo implement if needed
+// func (h Handler) CreateClient(ctx *fiber.Ctx) error { return nil }

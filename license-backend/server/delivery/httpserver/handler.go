@@ -12,7 +12,7 @@ type Handler struct {
 	jwtSvc    *jwt.Service
 }
 
-func New(
+func NewHandler(
 	userSvc *userservice.Service,
 	clientSvc *clientservice.Service,
 	jwtSvc *jwt.Service,

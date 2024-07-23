@@ -1,11 +1,11 @@
 
 1. login api // ok
 
-2. update client license
+2. update client license //ok
 
-3. list all client
+3. list all client //ok
 
-4. show log
+4. show log //
 
 5. scheduler to check license periodically
 

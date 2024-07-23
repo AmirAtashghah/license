@@ -3,6 +3,7 @@ package clientservice
 import (
 	"fmt"
 	"server/entity"
+	"server/pkg/hash"
 	"server/pkg/param"
 	"strconv"
 	"time"
@@ -11,8 +12,9 @@ import (
 type ClientRepo interface {
 	Insert(client entity.Client) error
 	Update(client entity.Client) error
-	Delete(client entity.Client) error
-	GetById(id string) (entity.Client, error)
+	Delete(id string) error
+	GetByID(id string) (entity.Client, error)
+	GetAll(filter param.ClientFilter) ([]entity.Client, error)
 }
 
 type ClientCache interface {
@@ -49,7 +51,7 @@ func (s Service) GenerateAuthKey(timestamp, number int64) (string, error) {
 
 	authKey := fmt.Sprintf("%d%d", timestamp, number)
 
-	authKeyHash, err := hashPassword(authKey)
+	authKeyHash, err := hash.Hash(authKey)
 	if err != nil {
 		return "", err
 	}
@@ -58,18 +60,20 @@ func (s Service) GenerateAuthKey(timestamp, number int64) (string, error) {
 
 func (s Service) AddNewClient(req *param.ClientRequest) error {
 
+	timestamp := time.Now().Unix()
+
 	// todo change value if need ?
 	c := entity.Client{
 		ID:              req.ID,
-		SoftwareName:    req.SoftwareName,
-		SoftwareVersion: req.SoftwareVersion,
-		HardwareHash:    req.HardwareHash,
-		LicenseType:     "",
-		UserMetadata:    req.UserMetadata,
-		ExpiresAt:       0,
-		CreatedAt:       time.Now().Unix(),
-		UpdatedAt:       0,
-		DeletedAt:       0,
+		SoftwareName:    &req.SoftwareName,
+		SoftwareVersion: &req.SoftwareVersion,
+		HardwareHash:    &req.HardwareHash,
+		LicenseType:     nil,
+		UserMetadata:    &req.UserMetadata,
+		ExpiresAt:       nil,
+		CreatedAt:       &timestamp,
+		UpdatedAt:       nil,
+		DeletedAt:       nil,
 	}
 
 	if err := s.repo.Insert(c); err != nil {
@@ -81,12 +85,12 @@ func (s Service) AddNewClient(req *param.ClientRequest) error {
 
 func (s Service) ValidateClientHashInfo(id, hardwareHash string) (bool, error) {
 
-	client, err := s.repo.GetById(id)
+	client, err := s.repo.GetByID(id)
 	if err != nil {
 		return false, err
 	}
 
-	if client.HardwareHash != hardwareHash {
+	if *client.HardwareHash != hardwareHash {
 		return false, nil
 	}
 
@@ -115,8 +119,65 @@ func (s Service) ValidateTimestamp(timestamp int64) error {
 
 // todo implement
 
-func (s Service) DeleteClient() {}
+func (s Service) DeleteClient(id string) error {
 
-func (s Service) UpdateClient() {}
+	if err := s.repo.Delete(id); err != nil {
+		return err
+	}
 
-func (s Service) ListClients() {}
+	return nil
+}
+
+func (s Service) UpdateClient(req param.UpdateClientRequest) error {
+
+	timestamp := time.Now().Unix()
+
+	c := entity.Client{
+		ID:           req.ID,
+		LicenseType:  &req.LicenseType,
+		UserMetadata: &req.UserMetadata,
+		ExpiresAt:    &req.ExpiresAt,
+		UpdatedAt:    &timestamp,
+		DeletedAt:    nil,
+	}
+
+	if err := s.repo.Update(c); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s Service) ListClients(filter param.ClientFilter) ([]entity.Client, error) {
+
+	if *filter.Offset < 0 {
+		*filter.Offset = 0
+	}
+	if *filter.Limit <= 0 {
+		*filter.Limit = 20
+	}
+
+	clients, err := s.repo.GetAll(filter)
+	if err != nil {
+		return nil, err
+	}
+
+	return clients, nil
+}
+
+func (s Service) ChangeActiveStatus(req param.ChangeActivateRequest) error {
+
+	timestamp := time.Now().Unix()
+
+	c := entity.Client{
+		ID:        req.ID,
+		IsActive:  &req.IsActivate,
+		UpdatedAt: &timestamp,
+	}
+
+	if err := s.repo.Update(c); err != nil {
+		return err
+	}
+
+	return nil
+}
