@@ -1,10 +1,21 @@
 const routes = [
   {
-    path: '/',
+    path: '/client',
     component: () => import('layouts/MainLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/IndexPage.vue') }
+      { path: '/Dashboard', name:'Dashboard',component: () => import('pages/Dashboard.vue') },
+      { path: '/AddNewClient', name:'AddNewClient',component: () => import('pages/AddNewClient.vue') },
+      { path: '/ClientDetail', name:'ClientDetail',component: () => import('pages/ClientDetail.vue') },
+      { path: '/ClientLog', name:'ClientLog',component: () => import('pages/ClientLog.vue') },
+      { path: '/Setting', name:'Setting',component: () => import('pages/Setting.vue') },
+      { path: '/UpdateClient', name:'UpdateClient',component: () => import('pages/UpdateClient.vue') }
     ]
+  },
+
+  {
+    path: '/Login',
+    name: 'Login',
+    component: () => import('pages/Login.vue')
   },
 
   // Always leave this as last one,

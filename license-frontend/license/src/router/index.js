@@ -17,6 +17,7 @@ export default route(function (/* { store, ssrContext } */) {
     : (process.env.VUE_ROUTER_MODE === 'history' ? createWebHistory : createWebHashHistory)
 
   const Router = createRouter({
+
     scrollBehavior: () => ({ left: 0, top: 0 }),
     routes,
 
@@ -26,5 +27,13 @@ export default route(function (/* { store, ssrContext } */) {
     history: createHistory(process.env.VUE_ROUTER_BASE)
   })
 
+
+  Router.beforeEach( (to,from,next)=>{
+    console.log(to.path)
+    // todo add login check
+    next()
+  })
+
   return Router
 })
+
