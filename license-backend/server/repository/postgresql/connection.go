@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"github.com/jackc/pgx/v5"
 	"log"
+	"server/logger"
 )
+
+const group = "postgresql"
 
 var Conn *pgx.Conn
 
@@ -37,6 +40,8 @@ func PostgreSQLConnection(cfg Config) *PostgreSQLDB {
 			cfg.DBName,
 		))
 	if err != nil {
+		logger.L().WithGroup(group).Error("error", "error", err.Error())
+
 		log.Panic(err)
 	}
 	return &PostgreSQLDB{config: cfg, db: db}

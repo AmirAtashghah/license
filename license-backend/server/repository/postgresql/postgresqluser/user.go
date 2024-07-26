@@ -6,8 +6,11 @@ import (
 	"fmt"
 	"github.com/jackc/pgx/v5"
 	"server/entity"
+	"server/logger"
 	"server/repository/postgresql"
 )
+
+const group = "postgresqluser"
 
 var (
 	GET = `SELECT id, username, password, login_at FROM users WHERE username=$1`
@@ -23,8 +26,10 @@ func New(conn *postgresql.PostgreSQLDB) *DB {
 	}
 }
 
-func (d *DB) GetUserByUsername(username string) (*entity.User, error) {
+func (d *DB) GetByUsername(username string) (*entity.User, error) {
 	if username == "" {
+		logger.L().WithGroup(group).Error("error", "error", "username cannot be empty")
+
 		return nil, fmt.Errorf("username cannot be empty")
 	}
 
@@ -36,6 +41,8 @@ func (d *DB) GetUserByUsername(username string) (*entity.User, error) {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil
 		}
+		logger.L().WithGroup(group).Error("error", "error", err.Error())
+
 		return nil, err
 	}
 

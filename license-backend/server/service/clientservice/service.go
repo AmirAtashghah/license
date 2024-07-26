@@ -3,11 +3,14 @@ package clientservice
 import (
 	"fmt"
 	"server/entity"
+	"server/logger"
 	"server/pkg/hash"
 	"server/pkg/param"
 	"strconv"
 	"time"
 )
+
+const group = "clientservice"
 
 type ClientRepo interface {
 	Insert(client entity.Client) error
@@ -17,29 +20,44 @@ type ClientRepo interface {
 	GetAll(filter param.ClientFilter) ([]entity.Client, error)
 }
 
+type LogRepo interface {
+	GetByClientHash(clientHash string) ([]entity.Log, error)
+}
+
 type ClientCache interface {
 	GetRequestNumber(number string) (string, error)
 	CacheRequestNumber(number, key string) error
 }
 
 type Service struct {
-	repo  ClientRepo
-	cache ClientCache
+	repo    ClientRepo
+	cache   ClientCache
+	logRepo LogRepo
+}
+
+func New(repo ClientRepo, cache ClientCache, logRepo LogRepo) *Service {
+	return &Service{repo: repo, cache: cache, logRepo: logRepo}
 }
 
 func (s Service) CheckDuplicateRequests(number int64) error {
 
 	cachedNumber, err := s.cache.GetRequestNumber(strconv.FormatInt(number, 10))
 	if err != nil {
+		logger.L().WithGroup(group).Error("error", "error", err.Error())
+
 		return err
 	}
 
 	if cachedNumber != "" {
+		logger.L().WithGroup(group).Error("error", "error", err.Error())
+
 		return fmt.Errorf("duplicate request")
 	}
 
 	err = s.cache.CacheRequestNumber(strconv.FormatInt(number, 10), strconv.FormatInt(number, 10))
 	if err != nil {
+		logger.L().WithGroup(group).Error("error", "error", err.Error())
+
 		return err
 	}
 
@@ -53,8 +71,11 @@ func (s Service) GenerateAuthKey(timestamp, number int64) (string, error) {
 
 	authKeyHash, err := hash.Hash(authKey)
 	if err != nil {
+		logger.L().WithGroup(group).Error("error", "error", err.Error())
+
 		return "", err
 	}
+
 	return authKeyHash, nil
 }
 
@@ -77,6 +98,8 @@ func (s Service) AddNewClient(req *param.ClientRequest) error {
 	}
 
 	if err := s.repo.Insert(c); err != nil {
+		logger.L().WithGroup(group).Error("error", "error", err.Error())
+
 		return err
 	}
 
@@ -87,6 +110,8 @@ func (s Service) ValidateClientHashInfo(id, hardwareHash string) (bool, error) {
 
 	client, err := s.repo.GetByID(id)
 	if err != nil {
+		logger.L().WithGroup(group).Error("error", "error", err.Error())
+
 		return false, err
 	}
 
@@ -95,6 +120,18 @@ func (s Service) ValidateClientHashInfo(id, hardwareHash string) (bool, error) {
 	}
 
 	return true, nil
+}
+
+func (s Service) GetClient(id string) (entity.Client, error) {
+
+	client, err := s.repo.GetByID(id)
+	if err != nil {
+		logger.L().WithGroup(group).Error("error", "error", err.Error())
+
+		return entity.Client{}, err
+	}
+
+	return client, nil
 }
 
 func (s Service) ValidateTimestamp(timestamp int64) error {
@@ -107,10 +144,14 @@ func (s Service) ValidateTimestamp(timestamp int64) error {
 	maxDuration := 5 * time.Minute
 
 	if tsp.After(currentTime) {
+		logger.L().WithGroup(group).Error("error", "error", "invalid request")
+
 		return fmt.Errorf("invalid request")
 	}
 
 	if currentTime.Sub(tsp) > maxDuration {
+		logger.L().WithGroup(group).Error("error", "error", "invalid request")
+
 		return fmt.Errorf("invalid request")
 	}
 
@@ -122,6 +163,8 @@ func (s Service) ValidateTimestamp(timestamp int64) error {
 func (s Service) DeleteClient(id string) error {
 
 	if err := s.repo.Delete(id); err != nil {
+		logger.L().WithGroup(group).Error("error", "error", err.Error())
+
 		return err
 	}
 
@@ -142,6 +185,8 @@ func (s Service) UpdateClient(req param.UpdateClientRequest) error {
 	}
 
 	if err := s.repo.Update(c); err != nil {
+		logger.L().WithGroup(group).Error("error", "error", err.Error())
+
 		return err
 	}
 
@@ -159,6 +204,8 @@ func (s Service) ListClients(filter param.ClientFilter) ([]entity.Client, error)
 
 	clients, err := s.repo.GetAll(filter)
 	if err != nil {
+		logger.L().WithGroup(group).Error("error", "error", err.Error())
+
 		return nil, err
 	}
 
@@ -176,8 +223,21 @@ func (s Service) ChangeActiveStatus(req param.ChangeActivateRequest) error {
 	}
 
 	if err := s.repo.Update(c); err != nil {
+		logger.L().WithGroup(group).Error("error", "error", err.Error())
+
 		return err
 	}
 
 	return nil
+}
+
+func (s Service) GetClientLogs(hash string) ([]entity.Log, error) {
+
+	logs, err := s.logRepo.GetByClientHash(hash)
+	if err != nil {
+		logger.L().WithGroup(group).Error("error", "error", err.Error())
+
+		return nil, err
+	}
+	return logs, nil
 }

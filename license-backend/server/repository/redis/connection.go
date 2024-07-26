@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"github.com/redis/go-redis/v9"
 	"log"
+	"server/logger"
 )
+
+const group = "redis"
 
 type Config struct {
 	Host     string `koanf:"host"`
@@ -29,6 +32,8 @@ func RedisConnection(cfg Config) *RedisDB {
 
 	_, err := Rdb.Ping(context.Background()).Result()
 	if err != nil {
+		logger.L().WithGroup(group).Error("error", "error", err.Error())
+
 		log.Fatalf("Could not connect to Redis: %v", err)
 	}
 

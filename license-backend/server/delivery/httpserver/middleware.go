@@ -2,6 +2,7 @@ package httpserver
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"server/logger"
 	"server/pkg/jwt"
 )
 
@@ -10,12 +11,16 @@ func (h Handler) GetTokenFromCookie(ctx *fiber.Ctx) error {
 	authHeader := ctx.Cookies("token", "")
 
 	if authHeader == "" {
-		return fiber.NewError(400, "invalid token")
+		logger.L().WithGroup(group).Error("error", "error", "invalid token", "code", fiber.ErrBadRequest.Code)
+
+		return ctx.Status(fiber.ErrBadRequest.Code).JSON(fiber.Map{"message": "invalid token"})
 	}
 
 	userId, err := getTokenInfo(authHeader, h.jwtSvc)
 	if err != nil {
-		return fiber.NewError(400, err.Error())
+		logger.L().WithGroup(group).Error("error", "error", err.Error(), "code", fiber.ErrBadRequest.Code)
+
+		return ctx.Status(fiber.ErrBadRequest.Code).JSON(fiber.Map{"message": err.Error()})
 	}
 
 	ctx.Set("userId", userId)
@@ -26,6 +31,8 @@ func (h Handler) GetTokenFromCookie(ctx *fiber.Ctx) error {
 func getTokenInfo(token string, j *jwt.Service) (string, error) {
 	c, err := j.VerifyToken(token)
 	if err != nil {
+		logger.L().WithGroup(group).Error("error", "error", err.Error())
+
 		return "", err
 	}
 
@@ -34,10 +41,3 @@ func getTokenInfo(token string, j *jwt.Service) (string, error) {
 
 	return m["userId"], nil
 }
-
-const (
-	RoleAdmin            string = "admin"
-	RoleHeadofDepartment string = "headofDepartment"
-	RoleMaster           string = "master"
-	RoleStudent          string = "student"
-)

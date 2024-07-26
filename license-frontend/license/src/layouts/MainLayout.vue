@@ -46,25 +46,25 @@ const menuList = [
     icon: 'add',
     label: 'Add new client',
     separator: false,
-    link: 'AddNewClient'
+    link: 'addNewClient'
   },
   {
     icon: 'dashboard',
     label: 'Dashboard',
     separator: false,
-    link: 'Dashboard'
+    link: 'dashboard'
   },
   {
     icon: 'settings',
     label: 'Settings',
     separator: false,
-    link: 'Setting'
+    link: 'setting'
   },
   {
     icon: 'logout',
     label: 'Logout',
     separator: false,
-    link: 'Logout'
+    link: 'logout'
 
   },
   {

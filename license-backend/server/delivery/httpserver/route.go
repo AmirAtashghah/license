@@ -6,7 +6,7 @@ func (h Handler) SetRoutes(app *fiber.App) {
 
 	api := app.Group("/api")
 
-	api.Post("/license-check", h.CheckLicense)
+	api.Post("/license-check/:hash", h.CheckLicense)
 
 	panel := app.Group("/panel", h.GetTokenFromCookie)
 
@@ -26,9 +26,12 @@ func (h Handler) SetRoutes(app *fiber.App) {
 	// change activate status client license
 	client.Post("/change-activate-status", h.UpdateActivateStatus)
 
+	client.Post("/get", h.GetClient)
+
 	// create client api : create manually todo add if needed
 
 	// show log api
+	client.Post("/logs/get", h.ListLogs)
 
 	// todo setting , add user if need
 

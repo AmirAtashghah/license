@@ -6,10 +6,13 @@ import (
 	"fmt"
 	"github.com/jackc/pgx/v5"
 	"server/entity"
+	"server/logger"
 	"server/pkg/param"
 	"server/repository/postgresql"
 	"strings"
 )
+
+const group = "postgresqlclient"
 
 type DB struct {
 	conn *postgresql.PostgreSQLDB
@@ -33,6 +36,8 @@ func (d *DB) Insert(client entity.Client) error {
 
 	_, err := d.conn.Conn().Exec(context.Background(), INSERT, client.ID, client.SoftwareName, client.SoftwareVersion, client.HardwareHash, client.LicenseType, client.UserMetadata, client.IsActive, client.ExpiresAt, client.CreatedAt, client.UpdatedAt, client.DeletedAt)
 	if err != nil {
+		logger.L().WithGroup(group).Error("error", "error", err.Error())
+
 		return err
 	}
 
@@ -52,6 +57,8 @@ func (d *DB) GetByID(id string) (*entity.Client, error) {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil
 		}
+		logger.L().WithGroup(group).Error("error", "error", err.Error())
+
 		return nil, err
 	}
 
@@ -99,6 +106,8 @@ func (d *DB) GetAll(filter param.ClientFilter) ([]entity.Client, error) {
 
 	rows, err := d.conn.Conn().Query(context.Background(), query, args...)
 	if err != nil {
+		logger.L().WithGroup(group).Error("error", "error", err.Error())
+
 		return nil, err
 	}
 	defer rows.Close()
@@ -119,12 +128,16 @@ func (d *DB) GetAll(filter param.ClientFilter) ([]entity.Client, error) {
 			&client.DeletedAt,
 		)
 		if err != nil {
+			logger.L().WithGroup(group).Error("error", "error", err.Error())
+
 			return nil, err
 		}
 		clients = append(clients, client)
 	}
 
 	if rows.Err() != nil {
+		logger.L().WithGroup(group).Error("error", "error", err.Error())
+
 		return nil, rows.Err()
 	}
 
@@ -133,6 +146,8 @@ func (d *DB) GetAll(filter param.ClientFilter) ([]entity.Client, error) {
 
 func (d *DB) Update(id string, client entity.Client) error {
 	if id == "" {
+		logger.L().WithGroup(group).Error("error", "error", "client ID cannot be empty")
+
 		return fmt.Errorf("client ID cannot be empty")
 	}
 
@@ -194,6 +209,8 @@ func (d *DB) Update(id string, client entity.Client) error {
 	// Execute the query
 	_, err := d.conn.Conn().Exec(context.Background(), queryBuilder.String(), args...)
 	if err != nil {
+		logger.L().WithGroup(group).Error("error", "error", err.Error())
+
 		return err
 	}
 
@@ -202,11 +219,15 @@ func (d *DB) Update(id string, client entity.Client) error {
 
 func (d *DB) Delete(id string) error {
 	if id == "" {
+		logger.L().WithGroup(group).Error("error", "error", "client ID cannot be empty")
+
 		return fmt.Errorf("client ID cannot be empty")
 	}
 
 	_, err := d.conn.Conn().Exec(context.Background(), DELETE, id)
 	if err != nil {
+		logger.L().WithGroup(group).Error("error", "error", err.Error())
+
 		return err
 	}
 

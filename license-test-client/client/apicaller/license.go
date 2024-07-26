@@ -132,7 +132,9 @@ func (s Service) Check() error {
 		return err
 	}
 
-	resp, err := http.Post("http://localhost:3000/check-license", "application/json", bytes.NewBuffer(jsonData))
+	url := fmt.Sprintf("http://localhost:3000/check-license/%s", hash)
+
+	resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
 		return err
 	}

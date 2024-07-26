@@ -5,9 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"github.com/redis/go-redis/v9"
+	"server/logger"
 	rdb "server/repository/redis"
 	"time"
 )
+
+const group = "authkey"
 
 type DB struct {
 	conn *rdb.RedisDB
@@ -23,6 +26,8 @@ func (d *DB) CacheNumber(key, value string) error {
 
 	err := d.conn.RedisClient.Set(context.Background(), key, value, 30*time.Minute).Err()
 	if err != nil {
+		logger.L().WithGroup(group).Error("error", "error", fmt.Errorf("could not cache number: %v", err).Error())
+
 		return fmt.Errorf("could not cache number: %v", err)
 	}
 
@@ -35,6 +40,8 @@ func (d *DB) GetCachedNumber(key string) (string, error) {
 	if errors.Is(err, redis.Nil) {
 		return "", nil
 	} else if err != nil {
+		logger.L().WithGroup(group).Error("error", "error", fmt.Errorf("could not get cached number: %v", err).Error())
+
 		return "", fmt.Errorf("could not get cached number: %v", err)
 	}
 

@@ -3,6 +3,7 @@ package httpserver
 import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
+	"server/logger"
 	"server/pkg/jwt"
 	"server/service/clientservice"
 	"server/service/userservice"
@@ -36,6 +37,7 @@ func (s Server) Serve() {
 	address := fmt.Sprintf(":%d", 3000) // s.config.HTTPServer.Port
 	fmt.Printf("start server on %s\n", address)
 	if err := s.Router.Listen(address); err != nil {
+		logger.L().WithGroup(group).Error("router start error", "error", err.Error())
 		fmt.Println("router start error", err)
 	}
 }

@@ -28,6 +28,14 @@ type DeleteClientRequest struct {
 	ID string `json:"id"`
 }
 
+type GetLogsClientRequest struct {
+	Hash string `json:"hash"`
+}
+
+type GetClientRequest struct {
+	ID string `json:"id"`
+}
+
 type ChangeActivateRequest struct {
 	ID         string `json:"id"`
 	IsActivate bool   `json:"is_activate"`
