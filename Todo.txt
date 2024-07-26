@@ -1,0 +1,18 @@
+
+1. login api // ok
+
+2. update client license //ok
+
+3. list all client //ok
+
+4. show log //
+
+5. scheduler to check license periodically
+
+6. client should keep id in database
+
+7. client should keep state of failed request
+
+8. add log to server side
+
+9. add config reader
