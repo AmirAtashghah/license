@@ -1,0 +1,10 @@
+// app global css in SCSS form
+@font-face {
+  font-family: "vazir";
+  font-style: normal;
+  font-weight: 400;
+  src: url("./fonts/Vazir-Medium.woff2") format("woff2"),
+    url("./fonts/Vazir-Medium.ttf") format("truetype"),
+    url("./fonts/Vazir-Medium.woff") format("woff");
+  font-display: swap;
+}
