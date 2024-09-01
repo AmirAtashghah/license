@@ -3,7 +3,6 @@ package hash
 import (
 	"crypto/sha512"
 	"encoding/base64"
-	"log"
 )
 
 //
@@ -29,10 +28,10 @@ func Hash(password string) (string, error) {
 
 func CheckHash(currPassword, hashedPassword string) bool {
 
-	log.Println("old hash", hashedPassword)
+	//log.Println("old hash", hashedPassword)
 
 	var currPasswordHash, _ = Hash(currPassword)
 
-	log.Println("new hash", currPasswordHash)
+	//log.Println("new hash", currPasswordHash)
 	return hashedPassword == currPasswordHash
 }
